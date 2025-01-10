@@ -5,6 +5,8 @@ const dotenv = require('dotenv');
 const path = require('path');
 const helmet = require('helmet');
 const cors = require('cors');
+const FormData = require("form-data");
+
 dotenv.config();
 
 const app = express();
@@ -45,17 +47,52 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   const imageBuffer = req.file.buffer;
 
   try {
-    const response = await axios.post(process.env.API_URL, imageBuffer, {
+    const form = new FormData();
+    form.append('file', imageBuffer, { filename: req.file.originalname });
+
+    const response = await axios.post(process.env.FAKE_IMAGE_API_URL + "/predict", form, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        ...form.getHeaders(), // Important pour inclure les en-têtes nécessaires pour multipart/form-data
       },
     });
 
-    // Return the result from the API
     res.json(response.data);
   } catch (error) {
     console.error('Error processing the image:', error.message);
     res.status(500).json({ message: 'An error occurred while processing the image.' });
+  }
+});
+
+app.get('/healthcheck', async (req, res) => {
+  try {
+    const isApiAlive = await axios.get(process.env.FAKE_IMAGE_API_URL + "/");
+
+    if (isApiAlive.status === 200) {
+      return res.json({
+        status: 'ok',
+        details: {
+          message: 'API is running fine',
+          fake_image_api_connection: 'ok',
+        }
+      });
+    } else {
+      return res.status(503).json({
+        status: 'error',
+        details: {
+          message: 'API is not responding',
+          fake_image_api_connection: 'error',
+        }
+      });
+    }
+  } catch (error) {
+    // En cas d'erreur de connexion
+    return res.status(503).json({
+      status: 'error',
+      details: {
+        message: 'API is not responding',
+        fake_image_api_connection: 'error',
+      }
+    });
   }
 });
 
