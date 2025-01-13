@@ -4,7 +4,7 @@ services:
   backend:
     build: .
     ports:
-      - "8888:8888"
+      - "55010:55010"
     environment:
       NODE_ENV: production
     volumes:

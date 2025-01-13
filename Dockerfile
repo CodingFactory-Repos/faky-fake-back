@@ -14,7 +14,7 @@ RUN npm install --production
 COPY . .
 
 # Exposer le port sur lequel l'application sera accessible
-EXPOSE 8888
+EXPOSE 55010
 
 # Définir la commande pour démarrer l'application
 CMD ["node", "server.js"]
